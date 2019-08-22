@@ -1,0 +1,82 @@
+---
+title: "605HW2"
+author: "Bin Lin"
+date: "2017-2-18"
+output: html_document
+---
+
+1. Problem set 1
+(1) Show that ATA$\neq$AAT in general. (Proof and demonstration.)
+
+First, if A is not a square matrix, we can assume the dimension of A is m$\times$ n and m$\neq$n Thereofore, ${ A }^{ T }$ will have dimension of n $\times$ m. So that the resulting matrix we got for $A{ A }^{ T }$ will be a m $\times$m matrix, while for ${ A }^{ T }A$, it will be n $\times$n matrix. Since m$\neq$n, $A{ A }^{ T }\neq{ A }^{ T }A$.
+
+Second, if A is a square matrix, 
+
+$A{ A }^{ T } = \begin{bmatrix} { a }_{ 11 } & { a }_{ 1n } \\ { a }_{ n1 } & { a }_{ nn } \end{bmatrix} \times \begin{bmatrix} { a }_{ 11 } & { a }_{ n1 } \\ { a }_{ 1n } & { a }_{ nn } \end{bmatrix} = \begin{bmatrix} { { a }_{ 11 } }^{ 2 }+{ { a }_{ 1n } }^{ 2 } & \begin{matrix} { a }_{ 11 } \ast { a }_{ n1 } \end{matrix}+\begin{matrix} { a }_{ 1n } \ast { a }_{ nn } \end{matrix} \\ \begin{matrix} { a }_{ 11 } \ast { a }_{ n1 } \end{matrix}+\begin{matrix} { a }_{ 1n } \ast { a }_{ nn } \end{matrix} & { { a }_{ n1 } }^{ 2 }+{ { a }_{ nn } }^{ 2 } \end{bmatrix}$
+
+
+${ A }^{ T }A = \begin{bmatrix} { a }_{ 11 } &  { a }_{ n1 } \\ { a }_{ 1n } & { a }_{ nn } \end{bmatrix} \times \begin{bmatrix} { a }_{ 11 } & { a }_{ 1n } \\ { a }_{ n1 } & { a }_{ nn } \end{bmatrix} = \begin{bmatrix} { { a }_{ 11 } }^{ 2 }+{ { a }_{ n1 } }^{ 2 } & \begin{matrix} { a }_{ 11 } \ast { a }_{ 1n } \end{matrix}+\begin{matrix} { a }_{ n1 } \ast { a }_{ nn } \end{matrix} \\ \begin{matrix} { a }_{ 11 } \ast { a }_{ 1n } \end{matrix}+\begin{matrix} { a }_{ 1n } \ast { a }_{ nn } \end{matrix} & { { a }_{ 1n } }^{ 2 }+{ { a }_{ nn } }^{ 2 } \end{bmatrix}$
+
+Obviously, $A{ A }^{ T }\neq{ A }^{ T }A$
+
+
+
+(2) For a special type of square matrix A, we get ATA != AAT . Under what conditions could this be true? (Hint: The Identity matrix I is an example of such a matrix). Please typeset your response using LaTeX mode in RStudio.
+
+The first proof shown in the above tells us this special matrix has to be a square matrix. The second proof indicate the special matrix A has to be symmetric along the diagonal (where those pivot points are). According to the example that is provided, ${ a }_{ 1n }$ has to be equal ${ a }_{ n1 }$. To generalize , ${ a }_{ ij }$ has to be equal ${ a }_{ ji }$. Then we can get $A{ A }^{ T } = { A }^{ T }A$.
+
+
+
+2. Problem set 2
+Write an R function to factorize a square matrix A into LU or LDU, whichever you prefer.
+You don't have to worry about permuting rows of A and you can assume that A is less than 5x5, if you need to hard-code any variables in your code. If you doing the entire assignment in R, then please submit only one markdown document for both the problems.
+
+```{r}
+factorize <- function(A)
+  {
+  r <- dim(A)[1]
+  c <- dim(A)[2]
+  
+  if (r!=c)
+    {
+    print ("Please enter a square matrix")
+    }
+  else
+  {
+    L <- diag(r)
+    D <- diag(r)
+
+    for (j in 1:(c-1))
+      {
+      for (i in (j+1):r)
+        {
+        multiplier <- (A[i,j]/A[j,j])
+        A[i,] <- A[i,] - (multiplier * A[j,])
+        L[i, j] <- multiplier
+
+      }
+    }
+    
+    }
+  U <- A
+  
+  for (i in 1:r)
+  {
+    D[i,i] <- U[i,i]
+    U[i,] <- U[i,] / U[i,i]
+  }
+  print ("Upper Triangular Matrix")
+  print (U)
+  print ("Lower Triangular Matrix")
+  print (L)
+  print ("Diagonal Matrix")
+  print (D)
+  print ("LDU")
+  print (L %*% D %*% U)
+}
+A <- matrix(17:32, nrow = 4, ncol = 4, byrow = TRUE)
+factorize(A)
+```
+
+
+

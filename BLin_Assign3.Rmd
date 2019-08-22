@@ -1,0 +1,95 @@
+---
+title: "BLin_Assign3"
+author: "Bin Lin"
+date: "2017-2-26"
+output: html_document
+---
+```{r}
+#install.packages("pracma")
+library("pracma")
+```
+
+
+1. Problem set 1
+(1) What is the rank of the matrix A?
+
+```{r}
+A <- matrix(c(1, 2, 3, 4, -1, 0, 1, 3, 0, 1, -2, 1, 5, 4, -2, -3), 4, 4, byrow = TRUE)
+A
+qr(A)$rank
+
+```
+
+(2) Given an mxn matrix where m > n, what can be the maximum rank? The mini-
+mum rank, assuming that the matrix is non-zero?
+
+For rectangular matrices the rank has to be no greater than the smaller of the row or column dimension. Since m > n, the maximum rank can only be n. The minimum rank of a non-zero matrix will be 1, because there will be at least one pivot point.  
+
+
+
+(3) What is the rank of matrix B?
+
+```{r}
+B <- matrix(c(1, 2, 1, 3, 6, 3, 2, 4, 2), 3, 3, byrow = TRUE)
+B
+qr(B)$rank
+```
+There is another way to solve this program. As we know the second and third row of the matrix is the linear combination of the first row. Therefore, they are linearly dependent. The second and third row can be eliminated to get the echelon form of a matrix. We will end up with only one pivot point or rank
+
+2. Problem set 2
+Compute the eigenvalues and eigenvectors of the matrix A. You'll need to show your
+work. You'll need to write out the characteristic polynomial and show your solution.
+
+```{r}
+A <- matrix(c(1, 2, 3, 0, 4, 5, 0, 0, 6), 3, 3, byrow = TRUE)
+A
+```
+
+To find eigenvalues and eigenvectors, the determinant of the matrix will have to be equal to 0.
+$det(A-\lambda I)=0$. The equation becomes
+
+$det\begin{Bmatrix} 1-\lambda  & 2 & 3 \\ 0 & 4-\lambda  & 5 \\ 0 & 0 & 6-\lambda  \end{Bmatrix}=0$
+
+Since the matrix is an upper triangular matrix, its determinant is just simply the products of its diagnal values. The resulting equation is also called characteristics polynomial.
+
+$(1-\lambda )(4-\lambda )(6-\lambda )=0$
+
+Therefore, the eigenvalues $\lambda =1,\quad 4,\quad 6$
+
+According to equation $Ax\quad =\quad \lambda x\quad \Rightarrow \quad (A-\lambda )x=0$ 
+
+When $\lambda=1$, 
+$(A-\lambda )=\begin{Bmatrix} 0 & 2 & 3 \\ 0 & 3 & 5 \\ 0 & 0 & 5 \end{Bmatrix}$
+```{r}
+A_minus_lambda <- matrix(c(0, 2, 3, 0, 3, 5, 0, 0, 5), 3, 3, byrow = TRUE)
+A_minus_lambda
+rref(A_minus_lambda)
+```
+$\begin{Bmatrix} 0 & 1 & 0 \\ 0 & 0 & 1 \\ 0 & 0 & 0 \end{Bmatrix}\begin{pmatrix} { v }_{ 1 } \\ { v }_{ 2 } \\ { v }_{ 3 } \end{pmatrix}=0$
+The corresponding eigenvector equals $\begin{cases} { v }_{ 1 }=\alpha  \\ { v }_{ 2 }=0 \\ { v }_{ 3 } = 0 \end{cases}$
+
+
+
+
+When $\lambda=4$,
+$(A-\lambda )=\begin{Bmatrix} -3 & 2 & 3 \\ 0 & 0 & 5 \\ 0 & 0 & 2 \end{Bmatrix}$
+```{r}
+A_minus_lambda <- matrix(c(-3, 2, 3, 0, 0, 5, 0, 0, 2), 3, 3, byrow = TRUE)
+A_minus_lambda
+rref(A_minus_lambda)
+```
+
+$\begin{Bmatrix} 1 & -0.667 & 0 \\ 0 & 0 & 1 \\ 0 & 0 & 0 \end{Bmatrix}\begin{pmatrix} { v }_{ 1 } \\ { v }_{ 2 } \\ { v }_{ 3 } \end{pmatrix}=0$
+The corresponding eigenvector equals $\begin{cases} { v }_{ 1 }=\beta  \\ { v }_{ 2 }=1.499\beta \\ { v }_{ 3 }=0 \end{cases}$
+
+
+When $\lambda=6$,
+$(A-\lambda )=\begin{Bmatrix} -5 & 2 & 3 \\ 0 & -2 & 5 \\ 0 & 0 & 0 \end{Bmatrix}$
+```{r}
+A_minus_lambda <- matrix(c(-5, 2, 3, 0, -2, 5, 0, 0, 0), 3, 3, byrow = TRUE)
+A_minus_lambda
+rref(A_minus_lambda)
+```
+$\begin{Bmatrix} 1 & 0 & -1.6 \\ 0 & 1 & -2.5 \\ 0 & 0 & 0 \end{Bmatrix}\begin{pmatrix} { v }_{ 1 } \\ { v }_{ 2 } \\ { v }_{ 3 } \end{pmatrix}=0$
+The corresponding eigenvector equals $\begin{cases} { v }_{ 1 }=\gamma   \\ { v }_{ 2 }=1.5625\gamma \\ { v }_{ 3 }=0.625\gamma \end{cases}$
+

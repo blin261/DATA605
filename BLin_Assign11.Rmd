@@ -1,0 +1,99 @@
+---
+title: "DATA 605 Assignment 11"
+author: "Bin Lin"
+date: "2017-4-21"
+output: html_document
+---
+
+Using R's lm function, perform regression analysis and measure the significance of the independent variables for the following two data sets. In the first case, you are evaluating the statement that we hear that Maximum Heart Rate of a person is related to their age by the following equation:
+
+$MaxHR=220-Age$
+
+You have been given the following sample:
+
+Age 18 23 25 35 65 54 34 56 72 19 23 42 18 39 37
+
+MaxHR 202 186 187 180 156 169 174 172 153 199 193 174 198 183 178
+
+Perform a linear regression analysis fitting the Max Heart Rate to Age using the lm function in R. 
+```{r}
+age <- c(18, 23, 25, 35, 65, 54, 34, 56, 72, 19, 23, 42, 18, 39, 37)
+maxhr <- c(202, 186, 187, 180, 156, 169, 174, 172, 153, 199, 193, 174, 198, 183, 178)
+
+model1 <- lm(maxhr ~ age)
+summary(model1)
+```
+
+
+What is the resulting equation? Is the effect of Age on Max HR significant?
+
+Based on the summary statistics of the linear regression model, the resulting formular is:
+$MaxHR=210-0.798\ast Age+\varepsilon$
+
+The effect of Age on MaxHR is significant because the p-value is 3.848e-08, which is very closed to 0, which is less than the significant threshold (typically 0.01)
+
+
+What is the significance level? Please also plot the fitted relationship between Max HR and Age.
+
+Based on the summary statistics of the model, the significance level of this model can be as small as 0.001. Even at this level, the effect of Age is significant, because p-value is almost 0.
+```{r}
+library(ggplot2)
+
+ggplot(data = data.frame(age, maxhr), aes(x = age, y = maxhr)) + geom_point() + geom_smooth(method = "lm") + ggtitle("Linear Model Between Age and MaxHR")
+par(mfrow=c(2,2))
+plot(model1)
+```
+
+
+Using the Auto data set from Assignment 5 (also attached here) perform a Linear Regression analysis using mpg as the dependent variable and the other 4 (displacement, horsepower, weight, acceleration) as independent variables. 
+```{r}
+auto <- read.table("C:/Users/blin261/Desktop/DATA605/assign11/auto-mpg.data", stringsAsFactors = FALSE)
+colnames(auto) <- c("displacement", "horsepower", "weight", "acceleration", "mpg")
+head(auto)
+
+model2 <- lm(mpg~., data = auto)
+summary(model2)
+```
+
+What is the final linear regression fit equation? Which of the 4 independent variables have a significant impact on mpg? What are their corresponding significance levels?
+
+Tha final linear regression fit equation of raw data is:
+$mpg=45.251-0.006\ast displacement-0.044\ast horsepower-0.005\ast weight-0.023\ast acceleration+\varepsilon$
+```{r}
+#Significance level of corresponding variables.
+summary(model2)$coefficients[,4]
+```
+
+horsepower and weight have significant impact on mpg. The significance level of horsepower is 0.01, while the significance level of weight is 0.001.
+
+What are the standard errors on each of the coefficients? 
+```{r}
+summary(model2)$coefficients[,2]
+```
+
+```{r}
+#Confidence interval of raw data for independent variables.
+confint(model2, level = 0.95)
+```
+
+Please perform this experiment in two ways. First take any random 40 data points from the entire auto data sample and perform the linear regression fit and measure the 95% confidence intervals. Then, take the entire data set (all 392 points) and perform linear regression and measure the 95% confidence intervals. Please report the resulting fit equation, their signficance values and confidence intervals for each of the two runs.
+
+```{r}
+set.seed(88)
+random <- sample(1:nrow(auto), 40, replace = FALSE)
+sample_data <- auto[random,]
+model3 <- lm(mpg ~ ., data = sample_data)
+summary(model3)
+
+#Significance level of corresponding variables.
+summary(model3)$coefficients[,4]
+
+#Confidence interval of sample data for independent variables.
+confint(model3, level = 0.95)
+```
+
+Tha final linear regression fit equation of sample data is:
+$mpg=53.958+0.009\ast displacement-0.034\ast horsepower-0.008\ast weight-0.278\ast acceleration+\varepsilon$
+
+Conclusion: On the sample data, only weight has significant impact on mpg. However, on the full data, both horsepower and weight are significant. This means the larger the size of the sample, the easier we will detect the effects of independent variables. Also by comparing the confidence interval between two datasets, we know the larger samples size, the tighter the confidence interval. On the other words, the larger sample size, the smaller standard errors. (Because confidence interval is basically point estimate +/- standard error)
+

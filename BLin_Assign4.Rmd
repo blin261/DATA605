@@ -1,0 +1,115 @@
+---
+title: "BLin_Assign4"
+author: "Bin Lin"
+date: "2017-3-4"
+output: html_document
+---
+
+1. Problem Set 1
+In this problem, we'll verify using R that SVD and Eigenvalues are related as worked
+out in the weekly module. Given a 3 * 2 matrix A. Write code in R to compute X = AAT and Y = ATA. Then, compute the eigenvalues and eigenvectors of X and Y using the built-in commans in R.
+Then, compute the left-singular, singular values, and right-singular vectors of A using
+the svd command. Examine the two sets of singular vectors and show that they are indeed
+eigenvectors of X and Y. In addition, the two non-zero eigenvalues (the 3rd value will
+be very close to zero, if not zero) of both X and Y are the same and are squares of the
+non-zero singular values of A.
+
+```{r}
+# Create the Matrix
+A <- matrix(c(1, 2, 3, -1, 0, 4), 2, 3, byrow = TRUE)
+A
+
+# Calculate the X and its eigentvalues and eigenvectors. 
+X <- A%*%t(A)
+X
+eigen(X)$values
+eigen(X)$vectors
+
+# Calculate the Y and its eigentvalues and eigenvectors. 
+Y <- t(A)%*%A
+Y
+
+eigen(Y)$values
+eigen(Y)$vectors
+
+
+#Compute left-singular, singular values and right-singular vectors of A
+svd(A)$d
+svd(A)$u
+svd(A)$v
+```
+
+As shown above, eigenvectors of X is identical to orthonormal matrix U, eigenvector of Y is identical to orthonomal matrix of V, except the sign on the first column. The sign does not change the orthogonality and normalization of the vector X and Y as proved in the following code.
+
+```{r}
+# Prove orthogonal and normalization for X
+round(t(svd(A)$u[1,]) %*% svd(A)$u[2,])
+round(t(eigen(X)$vectors[1,]) %*% eigen(X)$vectors[2,])
+xlength <- sqrt(t(eigen(X)$vectors) %*% eigen(X)$vectors)
+xlength
+
+# Prove orthogonal and normalization for Y
+round(t(svd(A)$v[1,]) %*% svd(A)$v[2,])
+round(t(eigen(Y)$vectors[1,]) %*% eigen(Y)$vectors[2,])
+ylength <- sqrt(t(eigen(Y)$vectors) %*% eigen(Y)$vectors)
+round(ylength)
+```
+
+The following code shows the eigenvalues of X and Y is identical to the square of non-zero eisingular values of A. 
+```{r}
+svd(A)$d
+eigen(X)$values
+eigen(Y)$values[1:2]
+all.equal((svd(A)$d) ^ 2, eigen(X)$values, eigen(Y)$values[1:2])
+```
+
+
+2. Problem Set 2
+Using the procedure outlined in section 1 of the weekly handout, write a function to
+compute the inverse of a well-conditioned full-rank square matrix using co-factors. In order
+to compute the co-factors, you may use built-in commands to compute the determinant.
+Your function should have the following signature:
+B = myinverse(A)
+where A is a matrix and B is its inverse and A*B = I. The off-diagonal elements of I
+should be close to zero, if not zero. Likewise, the diagonal elements should be close to 1, if
+not 1. Small numerical precision errors are acceptable but the function myinverse should
+be correct and must use co-factors and determinant of A to compute the inverse.
+
+
+```{r}
+myinverse <- function (A)
+{
+  if (nrow(A) != ncol(A))
+  {
+    print ("Matrix is not a square matrix. It has no inverse")
+  }
+  else
+  {
+    if (det(A) == 0)
+      {
+      print ("Determinant of matrix can not be zero")
+    }
+    else
+    {
+      C <- matrix(nrow = nrow(A), ncol = ncol(A))
+      for (i in 1:nrow(A))
+        {
+        for (j in 1:ncol(A))
+          {
+          sub_matrix <- A[-i,-j]
+          C[i,j] <- ((-1) ^ (i + j)) * det(sub_matrix)
+        }
+        }
+      inverse_A <- t(C)/det(A)
+      return (inverse_A)
+    }
+    }
+}
+
+set.seed(888)
+A <- matrix(rnorm(100), 4, 4, byrow = TRUE) 
+det(A)
+B <- myinverse(A)
+B
+```
+

@@ -1,0 +1,85 @@
+---
+title: "DATA 605 Assignment 14"
+author: "Bin Lin"
+date: "2017-5-12"
+output: html_document
+---
+
+This week, we'll work out some Taylor Series expansions of popular functions.
+
+$f\left( x \right) =\frac { 1 }{ (1-x) } ,x\in \left( -1,1 \right)$
+
+$f\left( x \right) ={ e }^{ x }$
+
+$f\left( x \right) =\ln { \left( 1+x \right)  } ,x\in \left( -1,1 \right)$
+
+For each function, only consider its valid ranges as indicated in the notes when you are
+computing the Taylor Series expansion. Please submit your assignment as a R-Markdown
+document.
+
+
+Taylor Series Approximation is used to represent functions as an infinite sum of polynomial terms that are calculated using a function's derivatives evaluated at a single point. Taylor's Theorem states that any function that is infinitely differentiable can be represented as a polynomial of the following form:
+
+
+$f\left( x \right) =\sum _{ n=0 }^{ \infty  }{ \frac { f^{ \left( n \right)  }\left( a \right)  }{ n! }  } \left( x-a \right) ^{ n }=f\left( a \right) +f^{ \left( 1 \right)  }\left( a \right) \left( x-a \right) +\frac { f^{ \left( 2 \right)  } }{ 2! } \left( x-a \right) ^{ 2 }+......$
+
+
+
+###Function One
+
+
+$f\left( x \right) =\frac { 1 }{ (1-x) } ,x\in \left( -1,1 \right)$
+
+
+$f\left( x \right) =\frac { 1 }{ \left( 1-a \right)  } +\frac { 1 }{ \left( 1-a \right) ^{ 2 } } \left( x-a \right) +\frac { \frac { 2 }{ \left( 1-a \right) ^{ 3 } }  }{ 2! } \left( x-a \right) ^{ 2 }+\frac { \frac { 6 }{ \left( 1-x \right) ^{ 4 } }  }{ 3! } \left( x-a \right) ^{ 3 }....$
+
+
+$=\frac { 1 }{ \left( 1-a \right)  } +\frac { \left( x-a \right)  }{ \left( 1-a \right) ^{ 2 } } +\frac { \left( x-a \right) ^{ 2 } }{ \left( 1-a \right) ^{ 3 } } +\frac { \left( x-a \right) ^{ 3 } }{ \left( 1-a \right) ^{ 4 } } ......$
+
+
+When a = 0,
+
+
+$={ 1 }^{ 2 }+{ x }+{ x }^{ 2 }+{ x }^{ 3 }......$
+
+
+$=\sum _{ n=0 }^{ \infty  }{ { x }^{ n } } ,\quad x\in \left( -1,1 \right)$
+
+
+
+
+###Function Two
+
+
+$f\left( x \right) ={ e }^{ x }$
+
+
+$f\left( x \right) ={ e }^{ a }+{ e }^{ a }\left( x-a \right) +\frac { { e }^{ a } }{ 2! } \left( x-a \right) ^{ 2 }+\frac { { e }^{ a } }{ 3! } \left( x-a \right) ^{ 3 }......$
+
+
+when a = 0,
+
+
+$=1+x+\frac { { x }^{ 2 } }{ 2! } +\frac { { x }^{ 3 } }{ 3! } ......$
+
+
+$=\sum _{ n=0 }^{ \infty  }{ \frac { { x }^{ n } }{ n! }  }$
+
+
+
+###Function Three
+
+
+$f\left( x \right) =\ln { \left( 1+x \right)  } ,x\in \left( -1,1 \right)$
+
+
+$f\left( x \right) =\ln { \left( 1+a \right)  } +\frac { 1 }{ \left( 1+a \right)  } \left( x-a \right) -\frac { \frac { 1 }{ \left( 1+a \right) ^{ 2 } }  }{ 2! } \left( x-a \right) ^{ 2 }+\frac { \frac { 2 }{ \left( 1+a \right) ^{ 3 } }  }{ 3! } \left( x-a \right) ^{ 3 }......$
+
+
+When a = 0,
+
+
+$=\ln { \left( 1 \right)  } +x-\frac { { x }^{ 2 } }{ 2 } +\frac { { x }^{ 3 } }{ 3 } ......$
+
+
+$=\quad \sum _{ n=0 }^{ \infty  }{ \left( -1 \right) ^{ \left( n+1 \right)  } } \frac { { x }^{ n } }{ n } ,\quad x\in \left( -1,1 \right)$

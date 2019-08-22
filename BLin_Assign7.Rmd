@@ -1,0 +1,122 @@
+---
+title: "BLin_Assign7"
+author: "Bin Lin"
+date: "2017-3-19"
+output: html_document
+---
+
+1. Problem Set 1
+Please write a function to compute the expected value and standard deviation of an array of values. 
+
+$\quad E(x)=\sum _{ i }^{  }{ P(x==i)\times i } \quad$
+
+```{r}
+expected_value <- function(v)
+{
+  n <- length(v)
+  E <- 0
+  
+  #Based on the formula, it is undefined if vector is empty.
+  if (n==0)
+  {
+    print ("Vector is empty")
+  }
+  else
+  {
+      for (i in v)
+        {
+        E <- E + (i / n)
+        }
+  }
+  return (E)
+}
+
+v <- 1:10
+expected_value(v)
+```
+
+
+
+Population Standard Deviation formula:
+$\quad \sigma =\sqrt { (\frac { 1 }{ N } \sum _{ i=1 }^{ N }{ ({ x }_{ i }-µ } )^{ 2 } } \quad$
+
+Sample Standard Deviation formula:
+$\quad s=\sqrt { (\frac { 1 }{ N-1 } \sum _{ i=1 }^{ N }{ ({ x }_{ i }-\overset { \_  }{ x }  } )^{ 2 } } \quad$
+```{r}
+standard_deviation <- function(v)
+{
+  n <- length(v)
+  #Based on the sample standard deviation formula, it is undefined if vector has only one value.
+  if (n == 1)
+  {
+    print ("Please enter vectors with more than 1 value")
+  }
+  else
+  {
+    variance <- (sum((v - expected_value(v)) ^ 2) / (n - 1))
+    s <- sqrt(variance)
+  }
+  return (s)
+}
+v <- 1:10
+standard_deviation(v)
+```
+
+
+Compare your results with that of R's mean and std functions. Please document your work in an R-
+Markdown file and ensure that you have good comments to help the reader follow your work.
+
+```{r}
+mean(v) == expected_value(v)
+sd(v) == standard_deviation(v)
+```
+
+
+Now, consider that instead of being able to neatly fit the values in memory in an array, you have an infinite stream of numbers coming by. How would you estimate the mean and standard deviation of such a stream? Your function should be able to return the current estimate of the mean and standard deviation at any time it is asked. Your program should maintain these current estimates and return them back at any invocation of these functions. (Hint: You can maintain a rolling estimate of the mean and standard deviation and allow these to slowly change over time as you see more and more new values).
+
+
+There is another formula can be used to calculate population standard deviation. The formula is shown in the following. Proof can be found on the wikipedia website: https://en.wikipedia.org/wiki/Standard_deviation
+
+$\sigma =\sqrt { E({ x }^{ 2 })-(E(x))^{ 2 } }$ 
+```{r}
+#First of all, I am setting up all the global variables and set them equals to 0. 
+e <- 0
+sum_xsquare <- 0
+sigma <- 0
+n <- 0
+  
+result <- data.frame(e, sigma)
+names(result) <- c("Current Mean", "Current Standard Deviation")
+  
+
+rolling_estimate <- function(v)
+{
+  
+  #Secondly, I am updating those global variables according to the formula above. 
+  e <- (n * e + sum(v)) / (n + length(v))
+  n <- n + length(v)  
+  sum_xsquare <- sum_xsquare + sum(v ^ 2)
+  sigma <- sqrt((sum_xsquare / n)  - (e ^ 2))
+  result <- rbind(result, c(e, sigma))
+  
+  
+  #Thirdly, use assign function to keep using these global variables at next invocation of this function.
+  assign("e", e, envir = .GlobalEnv)
+  assign("n", n, envir = .GlobalEnv)
+  assign("sum_xsquare", sum_xsquare, envir = .GlobalEnv)
+  assign("sigma", sigma, envir = .GlobalEnv)
+  assign("result", result, envir = .GlobalEnv)
+  return (result)
+}
+
+rolling_estimate(v)
+w <- 11:20
+
+rolling_estimate(w)
+
+x <- rnorm(1000, mean = 10, sd = 5)
+rolling_estimate(x)
+
+y <- rnorm(10000, mean = 10, sd = 5)
+rolling_estimate(y)
+```

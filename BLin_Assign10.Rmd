@@ -1,0 +1,95 @@
+---
+title: "BLin_Assign10"
+author: "Bin Lin"
+date: "2017-4-12"
+output: html_document
+---
+
+1. Playing with PageRank
+You'll verify for yourself that PageRank works by performing calculations on a small universe of web pages. Let's use the 6 page universe that we had in the course notes. For this directed graph, perform the following calculations in R. 
+
+![URL Page Universe](URLPageUniverse.png)
+
+$A=\begin{bmatrix} 0 & \frac { 1 }{ 2 }  & \frac { 1 }{ 2 }  & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 & 0 & 0 \\ \frac { 1 }{ 3 }  & \frac { 1 }{ 3 }  & 0 & 0 & \frac { 1 }{ 3 }  & 0 \\ 0 & 0 & 0 & 0 & \frac { 1 }{ 2 }  & \frac { 1 }{ 2 }  \\ 0 & 0 & 0 & \frac { 1 }{ 2 }  & 0 & \frac { 1 }{ 2 }  \\ 0 & 0 & 0 & 1 & 0 & 0 \end{bmatrix}$
+
+Form the A matrix. Then, introduce decay and form the B matrix as we did in the course notes. 
+
+
+The following is the decay formula, which I am going to use in the calculation
+$B=d\times A+\frac { 1-d }{ n }$
+
+```{r}
+A <- matrix(c(0, 1/2, 1/2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1/3, 1/3, 0, 0, 1/3, 0, 0, 0, 0, 0, 1/2, 1/2, 0, 0, 0, 1/2, 0, 1/2, 0, 0, 0, 1, 0, 0), 6, 6, byrow = TRUE)
+d <- 0.85
+B <- d * A + (1 - d) / nrow(A)
+
+# Matrix A has all 0s on the second row, which means the url 2 does not have any outlinks associated with it. This is what we called the dangling node. This is also the only raw which does not sum up to 1. Replace the row with uniform 1/6. (Their sum is 1)
+B[2,] <- rep(1/6, 6)
+B
+```
+
+
+
+Start with a uniform rank vector r and perform power iterations on B till convergence. That is, compute the solution r = Bn * r. Attempt this for a sufficiently large n so that r actually converges.
+```{r}
+convergence <- function(B, r)
+{
+  ri <- r
+  rf <- t(B) %*% ri
+  n <- 1
+
+  while(all.equal(ri, rf) != TRUE)
+  {
+    ri <- rf
+    rf <- t(B) %*% ri
+    n <- n + 1
+  }
+  output <- list("Number of Iterations" = n, "r" = rf)
+  return (output)
+}
+```
+
+```{r}
+r <- matrix(c(1/6, 1/6, 1/6, 1/6, 1/6, 1/6), 6, 1, byrow = TRUE)
+uniform_rank <- convergence(B, r)
+uniform_rank$r
+```
+
+
+
+Compute the eigen-decomposition of B and verify that you indeed get an eigenvalue of 1 as the largest eigenvalue and that its corresponding eigenvector is the same vector that you obtained in the previous power iteration method. Further, this eigenvector has all positive entries and it sums to 1. 
+
+```{r}
+#Just by eyeballing the eigen values, we can tell the largest eigen value is 1
+Re(eigen(t(B))$values)
+Re(eigen(t(B))$vectors)
+
+#After normalization of the vectors I got from previous power iteration method, we know it is identical to the eigen vector of B when its eigen value equals to 1.
+normalized_rank <- uniform_rank$r[,1] / sqrt(sum(uniform_rank$r[,1] ^ 2))
+normalized_rank
+
+#Both page rank vectors are identical.
+all.equal(normalized_rank, Re(eigen(t(B))$vectors[,1]))
+
+#This code just prove the all values in the vectors I got from previous power iteration method are positive entries and it sums to 1.
+sum(uniform_rank$r)
+```
+
+
+
+Use the graph package in R and its page.rank method to compute the Page Rank of the graph as given in A. Note that you don't need to apply decay. The package starts with a connected graph and applies decay internally. Verify that you do get the same PageRank vector as the two approaches above.
+
+```{r}
+library(igraph)
+pagerank_graph <- graph_from_adjacency_matrix(A, mode = c("directed"), weighted = TRUE)
+plot(pagerank_graph)
+
+pagerank_vector <- page_rank(pagerank_graph)$vector
+pagerank_vector
+
+normalized_pagerank <- pagerank_vector / sqrt(sum(pagerank_vector ^ 2))
+normalized_pagerank
+
+#It proves page.rank method generate same PageRank vector as other two approaches. 
+all.equal(normalized_rank, Re(eigen(t(B))$vectors[,1]), normalized_pagerank)
+```
