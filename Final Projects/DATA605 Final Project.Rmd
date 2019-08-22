@@ -1,0 +1,244 @@
+---
+title: "DATA605 Final Project"
+author: "Bin Lin"
+date: "2017-5-22"
+output: html_document
+---
+Pick one of the quantitative independent variables from the training data set (train.csv) , and define that variable as  X.   Pick SalePrice as the dependent variable, and define it as Y for the next analysis.
+
+```{r}
+#Loading all necessary R packages.
+suppressWarnings(suppressMessages(library(ggplot2)))
+suppressWarnings(suppressMessages(library(mice)))
+suppressWarnings(suppressMessages(library(dplyr)))
+suppressWarnings(suppressMessages(library(reshape2)))
+suppressWarnings(suppressMessages(library(MASS)))
+suppressWarnings(suppressMessages(library(broom)))
+suppressWarnings(suppressMessages(library(lmtest)))
+suppressWarnings(suppressMessages(library(moments)))
+suppressWarnings(suppressMessages(library(forecast)))
+suppressWarnings(suppressMessages(library(Metrics)))
+
+
+
+#Subset all the numeric variables, and the and filter out columns that have too many na. 
+raw_data <- read.csv("https://raw.githubusercontent.com/blin261/data-605/master/train.csv", header=TRUE, stringsAsFactors = FALSE)
+train <- Filter(is.numeric, raw_data)
+train <- train[ , colSums(is.na(train)) <= (0.05 * length(raw_data))]
+
+str(train)
+head(train)
+par(mar = rep(1, 4),mfrow=c(7, 5))
+for (i in 1:length(train))
+{
+    plot(density(train[,i]), main = colnames(train)[i])
+}
+
+
+#I would like to pick LotArea to be my X and Sale Price to be my Y. Then I create a dataframe containing X and Y. 
+X <- train$LotArea
+Y <- train$SalePrice
+house_price <- data.frame(X, Y)
+```
+
+
+###Probability.   
+Calculate as a minimum the below probabilities a through c.  Assume the small letter "x" is estimated as the 4th quartile of the X variable, and the small letter "y" is estimated as the 2d quartile of the Y variable.  Interpret the meaning of all probabilities.  
+a.	 P(X>x | Y>y)		b.  P(X>x, Y>y)		c.  P(X<x | Y>y)		
+
+```{r}
+#P(X > x)
+a <- subset(house_price, X > quantile(house_price$X, 0.75))
+
+
+#P(X <= x)
+b <- subset(house_price, X <= quantile(house_price$X, 0.75))
+
+
+#P(Y > y)
+c <- subset(house_price, Y > quantile(house_price$Y, 0.5))
+
+
+#P(Y <= y)
+d <- subset(house_price, Y <= quantile(house_price$Y, 0.5))
+
+
+
+#a.	 P(X>x | Y>y) = P(X>x, Y>y) / P(Y>y)
+nrow(intersect(a, c)) / nrow(c)
+
+
+#b.  P(X>x, Y>y)
+nrow(intersect(a, c)) / nrow(house_price)
+
+
+#c.  P(X<x | Y>y) = P(X<x, Y>y) / P(Y>y)
+nrow(intersect(b, c)) / nrow(c)
+```
+
+Does splitting the training data in this fashion make them independent? In other words, does P(X|Y)=P(X)P(Y))?   Check mathematically, and then evaluate by running a Chi Square test for association.  You might have to research this.  
+
+
+
+Splitting the training data in this fashion does not make them independent. Because P(X>x | Y>y) = 0.3791209, however, P(X>x, Y>y) = 0.1890411. The following code will perform the Chi Square test for association.
+
+```{r}
+nrow(intersect(a, c))
+nrow(intersect(a, d))
+nrow(intersect(b, c))
+nrow(intersect(b, d))
+
+frequency_table <- matrix((c(nrow(intersect(a, c)), nrow(intersect(a, d)), nrow(intersect(b, c)), nrow(intersect(b, d)))) , nrow = 2, ncol = 2, byrow = FALSE)
+
+colnames(frequency_table) <- c("P(X>x)", "P(X<=x)")
+rownames(frequency_table) <- c("P(Y>y)", "P(Y<=y)")
+frequency_table <- as.table(frequency_table)
+frequency_table
+
+chisq.test(frequency_table)
+```
+According to Chi-Square test, the p-value of test is 2.2e-16 which is much less than the typical significance level alpha = 0.05. Therefore, we should reject the null-hypothesis and claim that two variables we studied are dependent on each other, meaning there exist some kind of relationship between them. Having a larger lot area is going to influence the final sale price(apparently a positive relationship here).   
+
+
+###Descriptive and Inferential Statistics. 
+Provide univariate descriptive statistics and appropriate plots for both variables.   Provide a scatterplot of X and Y.  Transform both variables simultaneously using Box-Cox transformations.  You might have to research this. Using the transformed variables, run a correlation analysis and interpret.  Test the hypothesis that the correlation between these variables is 0 and provide a 99% confidence interval.  Discuss the meaning of your analysis.
+
+
+From the summary statistics, we can tell the distribution for both variables are skewed to the right, because their mean are larger than their median. It is also shown in the boxplot since there are a lot of outliers as the variables get larger. The histogram of LotArea looks like exponential distribution, while the histogram of SalePrice look more similar to possion distribution. And then the scatterplot of there two variables display a linear relationship.
+
+```{r}
+colnames(house_price) <- c("LotArea", "SalePrice")
+summary(house_price)
+
+par(mar = rep(4, 4), mfrow=c(1,2))
+boxplot(house_price$LotArea, xlab = "LotArea", ylab="Area")
+boxplot(house_price$SalePrice, xlab = "SalePrice", ylab="Price")
+
+par(mar = rep(4, 4), mfrow=c(1,2))
+hist(house_price$LotArea, xlab = "LotArea", ylab = "Number of Houses")
+hist(house_price$SalePrice, xlab = "SalePrice", ylab = "Number of Houses")
+
+
+plot(x = house_price$LotArea, y = house_price$SalePrice, xlab = "LotArea", ylab = "SalePrice")
+```
+
+
+
+I created first linear model. The histogram of the residuals does not follow normal distribution. The qqplot of the residual also gets bended. Both phenomena have indicated the both of them may not be a good candidates for building linear regression model, because their variances differ significantly across x-axis. This is what we called "heteroscedasticity". 
+
+```{r}
+m1 <- lm(SalePrice ~ LotArea, house_price)
+hist(m1$residuals)
+skewness(m1$residuals)
+qqnorm(m1$residuals)
+qqline(m1$residuals)
+```
+
+
+Using box-cox transformation on each of the two variables can yield normalized data variables which can be properly evaluated. Even residual histogram and qqplot are becoming normalized as show in the following figures. The skewedness is also reduced dramatically.
+```{r}
+saleprice_bc <- boxcox(house_price$SalePrice ~ 1)	
+y_lambda <- with(saleprice_bc, x[which.max(y)])
+y_lambda
+
+lotarea_bc <- boxcox(house_price$LotArea ~ 1)	
+x_lambda <- with(lotarea_bc, x[which.max(y)])
+x_lambda
+
+saleprice_new <- BoxCox(house_price$SalePrice, y_lambda)
+lotarea_new <- BoxCox(house_price$LotArea, x_lambda)
+
+m2 <- lm(saleprice_new ~ lotarea_new)
+hist(m2$residuals)
+skewness(m2$residuals)
+qqnorm(m2$residuals)
+qqline(m2$residuals)
+```
+
+
+The correlation coefficient between two variables are 0.3992109, which means moderate positive relationship. The relationship is statistically significant since the p-value is almost 0 (less than significance level 0.05). Therefore, we reject the null hypothesis, while accepting the alternative hypothesis to be true (true correlation is not equal to 0). The 99 percent confidence interval is (0.3410038, 0.4543686). If we perform the experiment 100 times by drawing sample distribution from the population, 99 or more times, the correlation between LotArea and SalePrice will fall in the range. 
+
+
+```{r}
+house_price2 <- data.frame(lotarea_new, saleprice_new)
+colnames(house_price2) <- c("LotArea", "SalePrice" )
+head(house_price2)
+cor(house_price2)
+
+cor.test(house_price2$LotArea, house_price2$SalePrice, conf.level = 0.99)
+```
+
+
+
+###Linear Algebra and Correlation.  
+Invert your correlation matrix. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix.
+
+```{r}
+A <- round(cor(house_price2))
+B <- round(solve(cor(house_price2)))
+A %*% B
+B %*% A
+```
+
+
+###Calculus-Based Probability & Statistics.  
+Many times, it makes sense to fit a closed form distribution to data.  For your non-transformed independent variable, location shift it so that the minimum value is above zero.  Then load the MASS package and run fitdistr to fit a density function of your choice.  (See  https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html ).  Find the optimal value of the parameters for this distribution, and then take 1000 samples from this distribution (e.g., rexp(1000, ???) for an exponential).  Plot a histogram and compare it with a histogram of your non-transformed original variable.   
+
+
+fitdistr is function which will find the  best fitting univariate distribution in terms of maximum-likelihood and return the optimal parameters. In  this case, lambda is the parameter for exponential distribution. The sample data was simulated using lambda. Apparently, the sample data follows exponential distribution more closedly. It is also less skewed and smooth.
+
+```{r}
+#Both Variables are above 0.
+summary(house_price)
+fit <- fitdistr(house_price$LotArea, densfun = "exponential")
+lambda_best <- fit$estimate
+lambda_best
+
+sample <- rexp(1000, lambda_best)
+
+par(mfrow=c(1,2))
+hist(house_price$LotArea, xlab = "Actual LotArea")
+hist(sample, xlab = "Simulated LotArea")
+```
+
+
+
+###Modeling.  
+Build some type of regression model and submit your model to the competition board.  Provide your complete model summary and results with analysis.  Report your Kaggle.com  user name and score.
+
+
+My model's prediction of sale price for the training dataset is very similar to the actual sale price. This is manifest in the both histogram and boxplot of the estimation residual. However, there still exist some outliers in the boxplot, that means for certain observations, the predicted value differ quite a lot from the actual value. But overall it is well performed model.
+```{r}
+#Remove both Id and SalePrice variables. 
+m3 <- lm(SalePrice ~. - Id - SalePrice, data = train) 
+m3_back <- step(m3, trace = 0)
+summary(m3_back)
+
+#Just want to see how well the model perform.
+AIC(m3_back)
+logLik(m3_back)
+plot(m3_back)
+
+
+par(mfcol=c(1,2))
+hist(train$SalePrice, xlab = "Actual Sale Price", ylab = "Number of Houses")
+hist(fitted(m3_back), xlab = "Predicted Sale Price", ylab = "Number of Houses")
+```
+
+
+###My final predicted results.
+```{r}
+#Prepared the test data for evaluation
+raw_data <- read.csv("https://raw.githubusercontent.com/blin261/data-605/master/test.csv", header = TRUE, stringsAsFactors = FALSE)
+test <- Filter(is.numeric, raw_data)
+test <- test[ , colSums(is.na(test)) <= (0.05 * length(raw_data))]
+str(test)
+
+#Create the data frame with the final result
+saleprice <- predict(m3_back, newdata = test, type = "response")
+final <- data.frame(test$Id, saleprice)
+colnames(final) <- c("Id", "SalePrice")
+write.table(final, row.names = FALSE, file = "C:/Users/blin261/Desktop/DATA605/Final Project/kaggle_final.csv", sep=",")
+```
+
+![Kaggle Final Result](https://raw.githubusercontent.com/blin261/data-605/master/Capture.PNG)
